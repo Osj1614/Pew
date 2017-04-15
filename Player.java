@@ -1,44 +1,63 @@
 package com.sjo.pew;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 /**
  * Created by seungjun on 2017-04-13.
  */
-public class Player {
-    float x;
-    float y;
-    float vx = 0;
-    float vy = 0;
-    Texture tex;
-    float radius = 20;
-    float life;
-    float speed;
+public class Player extends Entity {
     boolean top;
+    JoyStick move;
+    JoyStick shoot;
+    float charge = 0;
 
-    public Player(float _x, float _y, float _life, float _speed, Texture _tex, boolean _top) {
-        x = _x;
-        y = _y;
-        life = _life;
-        speed = _speed;
-        tex = _tex;
+    public Player(float _x, float _y, float _life, float _speed, Texture _tex, boolean _top, JoyStick _move, JoyStick _shoot) {
+        super(_x, _y, 20, _life, _speed, _tex);
         top = _top;
+        move = _move;
+        shoot = _shoot;
+        color = Color.GREEN;
     }
 
-    public void move(float delta)
+    public void move(float delta, PvpScreen game)
     {
-        float ax = x + vx * delta;
-        if(ax >= radius && ax <= 480 - radius)
-            x = ax;
+        vx = (float) (move.percentage * Math.cos(move.theta)) * speed;
+        vy = (float) (move.percentage * Math.sin(move.theta)) * speed;
+        super.move(delta, game);
 
-        float ay = y + vy * delta;
-        if(!top && ay >= radius && ay <= 400 - radius || top && ay >= 400 + radius && ay <= 800 - radius)
-            y = ay;
-    }
+        if(x < radius)
+            x = radius;
+        else if(x > 480 - radius)
+            x = 480 - radius;
 
-    public void draw(SpriteBatch batch) {
-        batch.setColor(0, 1, 0, 1);
-        batch.draw(tex, x - radius, y - radius, radius * 2, radius * 2);
+        if(top)
+        {
+            if(y < 400 + radius)
+                y = 400 + radius;
+            else if(y > 800 - radius)
+                y = 800 - radius;
+        }
+        else
+        {
+            if(y < radius)
+                y = radius;
+            else if(y > 400 - radius)
+                y = 400 - radius;
+        }
+
+        if(shoot.touchindex != -1 && charge < 1)
+            charge += delta;
+
+        if(shoot.touchup)
+        {
+            shoot.touchup = false;
+            float r = charge * 20;
+            charge = 0;
+            float nx = (float) Math.cos(shoot.theta);
+            float ny = (float) Math.sin(shoot.theta);
+            game.bullets.add(new Bullet(x + (radius + r) * nx, y + (radius + r) * ny, vx + nx * (100 + r * 5), vy + ny * (100 + r * 5), r, tex));
+        }
     }
 }

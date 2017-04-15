@@ -21,7 +21,7 @@ public class Pew extends Game {
 		font = new BitmapFont();
 		touchHandler = new TouchHandler(this);
 		Gdx.input.setInputProcessor(touchHandler);
-		setScreen(new PvpScreen(this));
+		setScreen(new MainMenuScreen(this, 0));
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
 
 import java.util.Iterator;
+import java.util.Random;
 
 /**
  * Created by seungjun on 2017-04-13.
@@ -18,8 +19,9 @@ import java.util.Iterator;
 public class PvpScreen implements Screen {
 
     final Pew game;
+    Random r = new Random();
     OrthographicCamera camera;
-    Player top ;
+    Player top;
     JoyStick topMove;
     JoyStick topShoot;
     float botcharge = 0;
@@ -29,6 +31,7 @@ public class PvpScreen implements Screen {
     Player bottom;
     Array<Bullet> bullets = new Array<Bullet>();
     Texture playerTex;
+    Array<Enemy> enemys = new Array<Enemy>();
 
     public PvpScreen(final Pew pew) {
         game = pew;
@@ -36,19 +39,33 @@ public class PvpScreen implements Screen {
         camera.setToOrtho(false, 480, 800);
         playerTex = new Texture(Gdx.files.internal("hos.png"));
 
-        top = new Player(240, 600, 100, 200, playerTex, true);
         topMove = new JoyStick(360, 680, 80, playerTex);
         game.touchables.add(topMove);
         topShoot = new JoyStick(120, 680, 80, playerTex);
         game.touchables.add(topShoot);
+        top = new Player(240, 600, 150, 300, playerTex, true, topMove, topShoot);
 
-        bottom = new Player(240, 200, 100, 200, playerTex, false);
         botMove = new JoyStick(120, 120, 80, playerTex);
         game.touchables.add(botMove);
         botShoot = new JoyStick(360, 120, 80, playerTex);
         game.touchables.add(botShoot);
+        bottom = new Player(240, 200, 150, 300, playerTex, false, botMove, botShoot);
+
+        AddEnemy(true);
+        AddEnemy(false);
     }
 
+    public void AddEnemy(boolean top) {
+        float x, y, speed, life, radius;
+        radius = r.nextFloat() * 10 + 15;
+        speed = r.nextFloat() * 100 + 50;
+        life = r.nextFloat() * 100 + 50;
+        y = r.nextFloat() * 400;
+        x = 240 + (r.nextInt(2) * 2 - 1) * (240 + radius);
+        if(top)
+            y += 400;
+        enemys.add(new Enemy(x, y, radius, life, speed, playerTex, top));
+    }
     /**
      * Called when this screen becomes the current screen for a {@link Game}.
      */
@@ -69,77 +86,62 @@ public class PvpScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
-
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
+
         top.draw(game.batch);
         bottom.draw(game.batch);
+
         for(Bullet bullet : bullets) {
             bullet.draw(game.batch);
         }
+
+        for(Enemy enemy : enemys){
+            enemy.draw(game.batch);
+        }
+
         topShoot.draw(game.batch);
         topMove.draw(game.batch);
         botShoot.draw(game.batch);
         botMove.draw(game.batch);
+
         game.batch.setColor(Color.WHITE);
         game.font.draw(game.batch, String.valueOf((int) bottom.life) + " : " + String.valueOf((int) top.life), 120, 400);
+
         game.batch.end();
 
         game.touchHandler.update();
-        top.vx = (float) (topMove.percentage * Math.cos(topMove.theta)) * top.speed;
-        top.vy = (float) (topMove.percentage * Math.sin(topMove.theta)) * top.speed;
-        bottom.vx = (float) (botMove.percentage * Math.cos(botMove.theta)) * bottom.speed;
-        bottom.vy = (float) (botMove.percentage * Math.sin(botMove.theta)) * bottom.speed;
-        if(topShoot.touchindex != -1 && topcharge < 1)
-            topcharge += delta;
-        if(botShoot.touchindex != -1 && botcharge < 1)
-            botcharge += delta;
 
-        if(topShoot.touchup)
-        {
-            topShoot.touchup = false;
-            float radius = topcharge * 20;
-            topcharge = 0;
-            float nx = (float) Math.cos(topShoot.theta);
-            float ny = (float) Math.sin(topShoot.theta);
-            bullets.add(new Bullet( top.x + (radius + top.radius) * nx, top.y + (radius + top.radius) * ny, top.vx + nx * (10 + radius * 10), top.vy + ny * (10 + radius * 10), radius, playerTex));
-        }
-
-        if(botShoot.touchup)
-        {
-            botShoot.touchup = false;
-            float radius = 5 + botcharge * 15;
-            botcharge = 0;
-            float nx = (float) Math.cos(botShoot.theta);
-            float ny = (float) Math.sin(botShoot.theta);
-            bullets.add(new Bullet(bottom.x + (radius + bottom.radius) * nx, bottom.y + (radius + bottom.radius) * ny, bottom.vx + nx * (10 + radius * 10), bottom.vy + ny * (10 + radius * 10), radius, playerTex));
-        }
-
-        top.move(delta);
-        bottom.move(delta);
         Iterator<Bullet> bulletIterator = bullets.iterator();
-        while(bulletIterator.hasNext())
-        {
+        while(bulletIterator.hasNext()) {
             Bullet bullet = bulletIterator.next();
             bullet.move(delta);
-            if(bullet.alive) {
-                if (bullet.intersectsWith(top)) {
-                    top.life -= bullet.damage;
-                    bulletIterator.remove();
-                    if(top.life <= 0)
-                        game.dispose();
-                } else if (bullet.intersectsWith(bottom)) {
-                    bottom.life -= bullet.damage;
-                    bulletIterator.remove();
-                    if(bottom.life <= 0)
-                        game.dispose();
-                }
-            }
-            else
+            if(!bullet.alive)
                 bulletIterator.remove();
         }
 
+        for(Iterator<Enemy> enemyIterator = enemys.iterator(); enemyIterator.hasNext(); ) {
+            Enemy enemy = enemyIterator.next();
+            enemy.move(delta, this);
+            if (!enemy.alive) {
+                AddEnemy(!enemy.top);
+                AddEnemy(!enemy.top);
+                enemyIterator.remove();
+            }
+        }
+
+        top.move(delta, this);
+        bottom.move(delta, this);
+
+        if(!top.alive) {
+            game.setScreen(new MainMenuScreen(game, 1));
+            dispose();
+        }
+        else if(!bottom.alive) {
+            game.setScreen(new MainMenuScreen(game, 2));
+            dispose();
+        }
     }
 
 
@@ -183,5 +185,6 @@ public class PvpScreen implements Screen {
     @Override
     public void dispose() {
         playerTex.dispose();
+
     }
 }

@@ -35,9 +35,9 @@ public class Bullet {
             alive = false;
     }
 
-    public boolean intersectsWith(Player player)
+    public boolean intersectsWith(Entity entity)
     {
-        return Math.hypot(player.x - x, player.y - y) <= radius + player.radius;
+        return Math.hypot(entity.x - x, entity.y - y) <= radius + entity.radius;
     }
 
     public void draw(SpriteBatch batch)
