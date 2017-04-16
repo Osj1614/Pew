@@ -13,7 +13,6 @@ public abstract class Entity {
     float y;
     float vx = 0;
     float vy = 0;
-    Texture tex;
     float radius;
     float life;
     float maxlife;
@@ -21,14 +20,16 @@ public abstract class Entity {
     float timer = 0;
     boolean alive = true;
     Color color = Color.WHITE;
+    static int ids = 0;
+    int id;
 
-    public Entity(float _x, float _y, float _radius, float _life, float _speed, Texture _tex) {
+    public Entity(float _x, float _y, float _radius, float _life, float _speed) {
         x = _x;
         y = _y;
         radius = _radius;
         maxlife = life = _life;
         speed = _speed;
-        tex = _tex;
+        id = ids++;
     }
 
     public void move(float delta, PvpScreen game) {
@@ -37,19 +38,21 @@ public abstract class Entity {
         Iterator<Bullet> bulletIterator = game.bullets.iterator();
         while(bulletIterator.hasNext()) {
             Bullet bullet = bulletIterator.next();
-            if (bullet.intersectsWith(this)) {
-                life -= bullet.damage;
-                bulletIterator.remove();
-                if (life <= 0)
-                    alive = false;
+            if (id != bullet.id) {
+                if (bullet.intersectsWith(this)) {
+                    life -= bullet.damage;
+                    bulletIterator.remove();
+                    if (life <= 0)
+                        alive = false;
+                }
             }
         }
     }
 
-    public void draw(SpriteBatch batch) {
+    public void draw(SpriteBatch batch, PvpScreen game) {
         batch.setColor(color);
-        batch.draw(tex, x - radius, y - radius, radius * 2, radius * 2);
-        batch.setColor(1, 0, 0, 0.7f);
-        batch.draw(tex, x - radius, y + radius, radius * 2 * life / maxlife, 5);
+        batch.draw(game.playerTex, x - radius, y - radius, radius * 2, radius * 2);
+        batch.setColor(1, 0, 0, 1);
+        batch.draw(game.Rect, x - radius, y + radius, radius * 2 * life / maxlife, 5);
     }
 }

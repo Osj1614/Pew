@@ -16,8 +16,8 @@ public class Enemy extends Entity {
     boolean top;
     Random random = new Random();
 
-    public Enemy(float _x, float _y, float _radius, float _life, float _speed, Texture _tex, boolean _top) {
-        super(_x, _y, _radius, _life, _speed, _tex);
+    public Enemy(float _x, float _y, float _radius, float _life, float _speed, boolean _top) {
+        super(_x, _y, _radius, _life, _speed);
         top = _top;
         color = Color.GRAY;
     }
@@ -53,8 +53,8 @@ public class Enemy extends Entity {
                 shooty = game.top.y;
             }
             else {
-                shootx = game.bottom.x;
-                shooty = game.bottom.y;
+                shootx = game.bot.x;
+                shooty = game.bot.y;
             }
             shootx += random.nextFloat() * 40 - 20;
             shooty += random.nextFloat() * 40 - 20;
@@ -62,8 +62,8 @@ public class Enemy extends Entity {
             float normal = (float) Math.hypot(x - shootx, y - shooty);
             float nx = (shootx - x) / normal;
             float ny = (shooty - y) / normal;
-            float r = random.nextFloat() * 10 + 10;
-            game.bullets.add(new Bullet(x + (radius + r) * nx, y + (radius + r) * ny, vx + nx * (100 + r * 5), vy + ny * (100 + r * 5), r, tex));
+            float r = random.nextFloat() * radius / 2 + radius / 2;
+            game.bullets.add(new Bullet(x + (radius + r) * nx, y + (radius + r) * ny, vx / 3 + nx * (speed / 2 + r * 5), vy / 3 + ny * (speed / 2 + r * 5), r, id));
         }
     }
 }

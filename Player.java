@@ -12,9 +12,11 @@ public class Player extends Entity {
     JoyStick move;
     JoyStick shoot;
     float charge = 0;
+    float power = 20;
+    float heal = 10;
 
-    public Player(float _x, float _y, float _life, float _speed, Texture _tex, boolean _top, JoyStick _move, JoyStick _shoot) {
-        super(_x, _y, 20, _life, _speed, _tex);
+    public Player(float _x, float _y, float _life, float _speed, boolean _top, JoyStick _move, JoyStick _shoot) {
+        super(_x, _y, 20, _life, _speed);
         top = _top;
         move = _move;
         shoot = _shoot;
@@ -26,6 +28,10 @@ public class Player extends Entity {
         vx = (float) (move.percentage * Math.cos(move.theta)) * speed;
         vy = (float) (move.percentage * Math.sin(move.theta)) * speed;
         super.move(delta, game);
+
+        life += heal * delta;
+        if(life > maxlife)
+            life = maxlife;
 
         if(x < radius)
             x = radius;
@@ -53,11 +59,11 @@ public class Player extends Entity {
         if(shoot.touchup)
         {
             shoot.touchup = false;
-            float r = charge * 20;
+            float r = charge * power / 2 + power;
             charge = 0;
             float nx = (float) Math.cos(shoot.theta);
             float ny = (float) Math.sin(shoot.theta);
-            game.bullets.add(new Bullet(x + (radius + r) * nx, y + (radius + r) * ny, vx + nx * (100 + r * 5), vy + ny * (100 + r * 5), r, tex));
+            game.bullets.add(new Bullet(x + (radius + r) * nx, y + (radius + r) * ny, vx / 3 + nx * (speed + r * 5), vy / 3 + ny * (speed + r * 5), r, id));
         }
     }
 }

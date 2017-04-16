@@ -14,9 +14,9 @@ public class Bullet {
     float radius;
     float damage;
     boolean alive = true;
-    Texture tex;
+    int id;
 
-    public Bullet(float _x, float _y, float _vx, float _vy, float _radius, Texture _tex)
+    public Bullet(float _x, float _y, float _vx, float _vy, float _radius, int _id)
     {
         x = _x;
         y = _y;
@@ -24,7 +24,7 @@ public class Bullet {
         vy = _vy;
         radius = _radius;
         damage = radius;
-        tex = _tex;
+        id = _id;
     }
 
     public void move(float delta)
@@ -40,9 +40,9 @@ public class Bullet {
         return Math.hypot(entity.x - x, entity.y - y) <= radius + entity.radius;
     }
 
-    public void draw(SpriteBatch batch)
+    public void draw(SpriteBatch batch, PvpScreen game)
     {
         batch.setColor(0, 0, 1, 1);
-        batch.draw(tex, x - radius, y - radius, radius * 2, radius * 2);
+        batch.draw(game.playerTex, x - radius, y - radius, radius * 2, radius * 2);
     }
 }

@@ -7,9 +7,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
-
 import java.util.Iterator;
 import java.util.Random;
 
@@ -24,13 +24,12 @@ public class PvpScreen implements Screen {
     Player top;
     JoyStick topMove;
     JoyStick topShoot;
-    float botcharge = 0;
-    float topcharge = 0;
     JoyStick botMove;
     JoyStick botShoot;
-    Player bottom;
+    Player bot;
     Array<Bullet> bullets = new Array<Bullet>();
     Texture playerTex;
+    Texture Rect;
     Array<Enemy> enemys = new Array<Enemy>();
 
     public PvpScreen(final Pew pew) {
@@ -38,18 +37,22 @@ public class PvpScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 480, 800);
         playerTex = new Texture(Gdx.files.internal("hos.png"));
-
+        Pixmap pixmap = new Pixmap(64, 64, Pixmap.Format.RGBA8888);
+        pixmap.setColor(1, 1, 1, 1);
+        pixmap.fillRectangle(0, 0, 64, 64);
+        Rect = new Texture(pixmap);
+        pixmap.dispose();
         topMove = new JoyStick(360, 680, 80, playerTex);
         game.touchables.add(topMove);
         topShoot = new JoyStick(120, 680, 80, playerTex);
         game.touchables.add(topShoot);
-        top = new Player(240, 600, 150, 300, playerTex, true, topMove, topShoot);
+        top = new Player(240, 600, 300, 300, true, topMove, topShoot);
 
         botMove = new JoyStick(120, 120, 80, playerTex);
         game.touchables.add(botMove);
         botShoot = new JoyStick(360, 120, 80, playerTex);
         game.touchables.add(botShoot);
-        bottom = new Player(240, 200, 150, 300, playerTex, false, botMove, botShoot);
+        bot = new Player(240, 200, 300, 300, false, botMove, botShoot);
 
         AddEnemy(true);
         AddEnemy(false);
@@ -64,7 +67,7 @@ public class PvpScreen implements Screen {
         x = 240 + (r.nextInt(2) * 2 - 1) * (240 + radius);
         if(top)
             y += 400;
-        enemys.add(new Enemy(x, y, radius, life, speed, playerTex, top));
+        enemys.add(new Enemy(x, y, radius, life, speed, top));
     }
     /**
      * Called when this screen becomes the current screen for a {@link Game}.
@@ -90,15 +93,15 @@ public class PvpScreen implements Screen {
 
         game.batch.begin();
 
-        top.draw(game.batch);
-        bottom.draw(game.batch);
+        top.draw(game.batch, this);
+        bot.draw(game.batch, this);
 
         for(Bullet bullet : bullets) {
-            bullet.draw(game.batch);
+            bullet.draw(game.batch, this);
         }
 
         for(Enemy enemy : enemys){
-            enemy.draw(game.batch);
+            enemy.draw(game.batch, this);
         }
 
         topShoot.draw(game.batch);
@@ -107,7 +110,7 @@ public class PvpScreen implements Screen {
         botMove.draw(game.batch);
 
         game.batch.setColor(Color.WHITE);
-        game.font.draw(game.batch, String.valueOf((int) bottom.life) + " : " + String.valueOf((int) top.life), 120, 400);
+        game.font.draw(game.batch, String.valueOf((int) bot.life) + " : " + String.valueOf((int) top.life), 120, 400);
 
         game.batch.end();
 
@@ -124,7 +127,20 @@ public class PvpScreen implements Screen {
         for(Iterator<Enemy> enemyIterator = enemys.iterator(); enemyIterator.hasNext(); ) {
             Enemy enemy = enemyIterator.next();
             enemy.move(delta, this);
+            Player who = bot;
+            if(enemy.top)
+                who = top;
             if (!enemy.alive) {
+                switch(r.nextInt(4)) {
+                    case 0: who.maxlife += 50;
+                        break;
+                    case 1: who.heal  += 5;
+                        break;
+                    case 2: who.power += 5;
+                        break;
+                    case 3: who.speed += 50;
+                        break;
+                }
                 AddEnemy(!enemy.top);
                 AddEnemy(!enemy.top);
                 enemyIterator.remove();
@@ -132,13 +148,13 @@ public class PvpScreen implements Screen {
         }
 
         top.move(delta, this);
-        bottom.move(delta, this);
+        bot.move(delta, this);
 
         if(!top.alive) {
             game.setScreen(new MainMenuScreen(game, 1));
             dispose();
         }
-        else if(!bottom.alive) {
+        else if(!bot.alive) {
             game.setScreen(new MainMenuScreen(game, 2));
             dispose();
         }
@@ -185,6 +201,6 @@ public class PvpScreen implements Screen {
     @Override
     public void dispose() {
         playerTex.dispose();
-
+        Rect.dispose();
     }
 }

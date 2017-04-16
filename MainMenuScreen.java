@@ -45,11 +45,11 @@ public class MainMenuScreen implements Screen {
         game.batch.begin();
         CharSequence message;
         switch(win){
-            case 1: message = "Bottom Player won! Touch to play again.";
+            case 1: message = "아래승~";
                 break;
-            case 2: message = "Top Player won! Touch to play again.";
+            case 2: message = "위승~";
                 break;
-            default: message = "Touch to Pew";
+            default: message = "퓨!";
                 break;
         }
         game.batch.setColor(1, 1, 1, 1);
