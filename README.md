@@ -1,2 +1,2 @@
 # Pew
-Classic Shooting game as PvP 
+Classic PvP shooting game
